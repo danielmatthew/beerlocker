@@ -2,29 +2,38 @@
 var express = require('express');
 var mongoose = require('mongoose');
 var bodyParser = require('body-parser');
-var Beer = require('./models/beer');
+var passport = require('passport');
+var beerController = require('./controllers/beer');
+var userController = require('./controllers/user');
+var authController = require('./controllers/auth');
 
 // Connect to MongoDB
-mongoose.connect('mongodb://localhost:27017/beerlocker');
+mongoose.connect("mongodb://bl_user:qwerty123@ds037551.mongolab.com:37551/beerlocker");
 
 // Create new express app
 var app = express();
 
 app.use(bodyParser.urlencoded({
-  extended: true;
+  extended: true
 }));
+
+app.use(passport.initialize());
 
 // Create Express router
 var router = express.Router();
 
 router.route('/beers')
-  .post(beerController.postBeers)
-  .get(beerController.getBeers);
+  .post(authController.isAuthenticated, beerController.postBeers)
+  .get(authController.isAuthenticated, beerController.getBeers);
 
 router.route('/beers/:beer_id')
-  .get(beerController.getBeer)
-  .put(beerController.putBeer)
-  .delete(beerController.deleteBeer);
+  .get(authController.isAuthenticated, beerController.getBeer)
+  .put(authController.isAuthenticated, beerController.putBeer)
+  .delete(authController.isAuthenticated, beerController.deleteBeer);
+
+router.route('/users')
+  .post(userController.postUsers)
+  .get(authController.isAuthenticated, userController.getUsers);
 
 // Register all routes with /api
 app.use('/api', router);
